@@ -12,6 +12,7 @@ import jwt from "jsonwebtoken";
 import axios from 'axios';
 import jsPDF from 'jspdf';
 import download from 'downloadjs';
+import "./profileUpdateStyle.css";
 
 
 class PostList extends Component {
@@ -74,15 +75,13 @@ class PostList extends Component {
         <span className="span-with-margin text-grey">{post.post}</span>
         {/* {<Link className="link-without-underline" to={`http://localhost:5000/public/img/users/${post.post}`}>  Download file</Link>} */}
         {/* <a href = {`http://localhost:5000/public/img/users/${post.post}`} target = "_blank">Download Pdf</a> */}
+        <div class = "image-preview" id = "imagePreview"> 
+          <img src = {`http://localhost:5000/public/img/users/useruploadedpost - ${post.content}.jpeg`} class = "image-preview__image"  alt = "Image Preview"/> 
+        </div>
         <a href="#/" onClick={() =>
                         downloadFile(`${post._id}`, `${post.post}`, 'application/pdf')
                       }
         > Download file </a>
-        {/* <button onClick = {() =>{
-     var doc = new jsPDF('landscape','px','a4',false);
-     doc.loadFile('Resume.pdf',1);
-     doc.save('a.pdf');
-   }}> Download pdf </button> */}
         <h3>
           {/* <Link className="link-without-underline" to={`/posts/${post._id}`}>
             {post.title}
@@ -98,6 +97,39 @@ class PostList extends Component {
         {<Link className="link-without-underline" to={`/comments/${post._id}`}> View Comments </Link>}
         {/* {this.renderTags(post.categories)} */}
         <hr />
+        <Helmet>
+          <script>
+              {`
+                  const inpFile = document.getElementById("inpFile");
+                  const previewContainer = document.getElementById("imagePreview");
+                  const previewImage = previewContainer.querySelector(".image-preview__image");
+                  const previewDefaultText = previewContainer.querySelector(".image-preview__default-text");
+
+                  inpFile.addEventListener("change", function() {
+                      const file = this.files[0];
+
+                      if (file) {
+                          const reader = new FileReader();
+
+                          previewDefaultText.style.display = "none";
+                          previewImage.style.display = "block";
+
+                          reader.addEventListener("load", function() {
+                              console.log(this);
+                              previewImage.setAttribute("src",this.result);
+                          });
+                          reader.readAsDataURL(file);
+                      }
+                      else {
+                          previewDefaultText.style.display = null;
+                          previewImage.style.display = null;
+                          previewImage.setAttribute("src","");
+                      }
+                      
+                  })
+              `}
+          </script>
+          </Helmet>
       </div>
     );
   }

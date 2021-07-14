@@ -50,25 +50,6 @@ class addPhoto extends Component {
 
     render() {
         return (
-            // <div>
-                 
-            //     <form onSubmit={this.onsubmit}>
-            //         <br />
-            //         <br />
-            //         <br />
-            //         <br />
-            //         <div class = "image-preview" id = "imagePreview"> 
-            //             <img src = "" alt = "Image Preview" class = "image-preview__image"/>
-            //             <span class="image-preview__default-text">Image Preview</span>
-            //         </div>
-            //             <br />
-            //         <div>
-            //         <input type = "file" name = "inpFile" id = "inpFile" accept = "image/*" onChange={this.handleInputChange} /><br />
-            //         </div>
-            //         <button>Submit</button>
-            //     </form>
-               
-            // </div>
 
             <div class="min-h-screen flex items-center justify-center bg-blue-400">
 

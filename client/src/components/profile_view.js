@@ -62,24 +62,7 @@ class profile_view extends Component {
 
     render() {
         return (
-            // <div>
-            //     <br />
-            //     <br />
-            //     <br />
-            //     <br />
-            //     <p>Name: {this.state.name}</p>
-            //     <p>DOB: {this.state.dob}</p>
-            //     <p>Gender: {this.state.gender}</p>
-            //     <p>Email: {this.state.email}</p>
-            //     <p>Department: {this.state.department}</p>
-            //     <p>Description: {this.state.description}</p>
-            //     {/* <p>Photo : {this.state.Photo} </p> */}
-            //     <img src = {this.state.Photo} class = "image-preview__image" alt="Profile_pic" />
-
-            //     <button onClick={this.onSubmit}>Update profile</button>
-            // </div>
             <div>
-            {/* <Header pname = {this.state.Photo} /> */}
             <div class="min-h-screen flex items-center justify-center bg-blue-400">
             <Reload />
 

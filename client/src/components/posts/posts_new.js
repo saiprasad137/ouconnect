@@ -5,6 +5,7 @@ import Dropzone from 'react-dropzone';
 import Helmet from 'react-helmet';
 import { connect } from "react-redux";
 import { Form, Row, Col, Button } from 'react-bootstrap';
+import "./profileUpdateStyle.css";
 
 
   
@@ -20,10 +21,13 @@ import { Form, Row, Col, Button } from 'react-bootstrap';
         this.onChangecontent = this.onChangecontent.bind(this);
         this.onSubmit = this.onSubmit.bind(this);
         this.handleInputChange = this.handleInputChange.bind(this);
+        this.handlePicupload = this.handlePicupload.bind(this);
         this.state = {
             title : '',
             categories : '',
-            content : ''
+            content : '',
+            Photo: '',
+            post:''
         }
     }
 
@@ -51,7 +55,11 @@ import { Form, Row, Col, Button } from 'react-bootstrap';
             post: e.target.files[0]
           })
     }
-
+    handlePicupload(e) {
+        this.setState({
+            Photo: e.target.files[0]
+          })
+    }
     onSubmit(e) {
         e.preventDefault()
 
@@ -83,7 +91,9 @@ import { Form, Row, Col, Button } from 'react-bootstrap';
             console.log(error.response.data);
         })
 
-        const data = new FormData();
+        // PDF UPLOAD
+        
+        var data = new FormData();
         data.append('post', this.state.post);
         console.log(this.state.post);
         axios.get('http://localhost:5000/userdetails', { headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` } })
@@ -92,7 +102,7 @@ import { Form, Row, Col, Button } from 'react-bootstrap';
           console.log(res.data);
           var name = res.data.Name;
           var content = this.state.content;
-        //   console.log(id);
+          console.log(name);
               axios.post(`http://localhost:5000/uploadpost/${name}/${content}`,data,{
                 // headers: {
                 //     'Content-Type': 'multipart/form-data'
@@ -108,59 +118,47 @@ import { Form, Row, Col, Button } from 'react-bootstrap';
           console.error(err);
       })
         
+    //   PHOTO UPLOAD
 
-        setTimeout(() => {
-            this.props.history.push({
-                pathname: '/posts',
-            });
-        },2000);
+      var data2 = new FormData();
+      data2.append('Photo', this.state.Photo);
+      console.log(this.state.Photo);
+    //   console.warn(this.state.Photo);
+      axios.get('http://localhost:5000/userdetails', { headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` } })
+      // axios.get('/userdetails', { headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` } })
+      .then((res)=>{
+          var id = res.data._id
+          var name = res.data.Name;
+          var content = this.state.content;
+          console.log(content);
+          axios.post(`http://localhost:5000/uploadpic/${name}/${content}`,data2,{
+          // axios.post(`/updatephoto/${id}`,data,{
+              // headers: {
+                
+              //   'Content-Type': `multipart/form-data`
+              // }
+            }).then((res) => {
+              console.log(res.data);
+          }).catch((err) => {
+              console.error(err);
+          })
+      })
+
+        // setTimeout(() => {
+        //     this.props.history.push({
+        //         pathname: '/posts',
+        //     });
+        // },2000);
     }
 
 
 
 
     render() {
-        // const [file, setFile] = useState(null); // state for storing actual image
-        // const [previewSrc, setPreviewSrc] = useState(''); // state for storing previewImage
-    
-        // const [errorMsg, setErrorMsg] = useState('');
-        // const [isPreviewAvailable, setIsPreviewAvailable] = useState(false); // state to show preview only for images
-        // const dropRef = useRef(); // React ref for managing the hover state of droppable area
-      
-        // const onDrop = (files) => {
-        //     const [uploadedFile] = files;
-        //     setFile(uploadedFile);
-          
-        //     const fileReader = new FileReader();
-        //     fileReader.onload = () => {
-        //       setPreviewSrc(fileReader.result);
-        //     };
-        //     fileReader.readAsDataURL(uploadedFile);
-        //     setIsPreviewAvailable(uploadedFile.name.match(/\.(jpeg|jpg|png)$/));
-        // };
 
         
         return (
-            // <div>
-            //     <div class="form-container">
-
-
-            //         <form onSubmit={this.onSubmit} id="form">
-            //             <h3>Add Post</h3>
-            //             <div class="container">                          
-            //                 <input type="text" value={this.state.title} onChange={this.onChangetitle} placeholder="title"></input>
-            //             </div>
-            //             <div class="container">                            
-            //                 <input type="text" value={this.state.categories} onChange={this.onChangecategories} placeholder="categories"></input>                           
-            //             </div>
-            //             <div class="container">                           
-            //                 <input type="text" value={this.state.content} onChange={this.onChangecontent} placeholder="content" />                           
-            //             </div>                       
-            //             <input type="submit" value="Submit" />
-            //         </form>
-            //     </div>
-            // </div>
-
+        
             <div class="min-h-screen flex items-center justify-center bg-blue-400">
             <div class="bg-white p-10 rounded shadow-2xl w-4/5 md:w-1/2 lg:w-1/4">
 
@@ -181,45 +179,58 @@ import { Form, Row, Col, Button } from 'react-bootstrap';
                     <label class="block mb-1 font-bold text-gray-700">Content</label>
                     <input type="text" class="w-full h-9 border-2 border-gray-200 p-2 rounded outline-none focus:border-purple-500" value={this.state.content} onChange={this.onChangecontent} />
                 </div>
+                <div class="flex flex-wrap justify-center">
+                <div class="w-2/3">
+                    <div class = "image-preview" id = "imagePreview"> 
+                       <img src = "" alt = "Image Preview" class = "image-preview__image"/>
+                        <span class="image-preview__default-text">Image Preview</span>
+                    </div>
+                    <br />
+                    <input type = "file" name = "inpFile" id = "inpFile" accept = "image/*" onChange={this.handlePicupload} class="pt-4"/>
+                </div>
+                </div>
                 <div>
                     <label class="block mb-1 font-bold text-gray-700">Attach a pdf</label>
-                    <input type = "file" name = "inpFile" id = "inpFile" accept = "application/pdf" onChange={this.handleInputChange} class="pt-4"/>
+                    <input type = "file" name = "inpFile"  accept = "application/pdf" onChange={this.handleInputChange} class="pt-4"/>
                 </div>
-                {/* <div className="upload-section">
-                <Dropzone onDrop={onDrop}>
-                {({ getRootProps, getInputProps }) => (
-                    <div {...getRootProps({ className: 'drop-zone' })} ref={dropRef}>
-                    <input {...getInputProps()} />
-                    <p>Drag and drop a file OR click here to select a file</p>
-                    {file && (
-                        <div>
-                        <strong>Selected file:</strong> {file.name}
-                        </div>
-                    )}
-                    </div>
-                )}
-                </Dropzone>
-                {previewSrc ? (
-                isPreviewAvailable ? (
-                    <div className="image-preview">
-                    <img className="preview-image" src={previewSrc} alt="Preview" />
-                    </div>
-                ) : (
-                    <div className="preview-message">
-                    <p>No preview available for this file</p>
-                    </div>
-                )
-                ) : (
-                <div className="preview-message">
-                    <p>Image preview will be shown here after selection</p>
-                </div>
-                )}
-                </div> */}
                 <div class="flex justify-center">
                 <button class="font-bold py-2 px-4 rounded bg-blue-500 text-white hover:bg-blue-700" onClick={this.update}>Submit</button>
                 </div>
     
                 </form>
+                <Helmet>
+                <script>
+                    {`
+                        const inpFile = document.getElementById("inpFile");
+                        const previewContainer = document.getElementById("imagePreview");
+                        const previewImage = previewContainer.querySelector(".image-preview__image");
+                        const previewDefaultText = previewContainer.querySelector(".image-preview__default-text");
+
+                        inpFile.addEventListener("change", function() {
+                            const file = this.files[0];
+
+                            if (file) {
+                                const reader = new FileReader();
+
+                                previewDefaultText.style.display = "none";
+                                previewImage.style.display = "block";
+
+                                reader.addEventListener("load", function() {
+                                    console.log(this);
+                                    previewImage.setAttribute("src",this.result);
+                                });
+                                reader.readAsDataURL(file);
+                            }
+                            else {
+                                previewDefaultText.style.display = null;
+                                previewImage.style.display = null;
+                                previewImage.setAttribute("src","");
+                            }
+                            
+                        })
+                    `}
+                </script>
+                </Helmet>
             </div>
 
         </div>

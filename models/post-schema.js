@@ -25,6 +25,9 @@ let postSchema = new Schema({
   post : {
     type : String
   },
+  Photo : {
+    type : String
+  },
   file_path: {
     type: String,
     // required: true
