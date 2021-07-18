@@ -75,13 +75,13 @@ class PostList extends Component {
         <span className="span-with-margin text-grey">{post.post}</span>
         {/* {<Link className="link-without-underline" to={`http://localhost:5000/public/img/users/${post.post}`}>  Download file</Link>} */}
         {/* <a href = {`http://localhost:5000/public/img/users/${post.post}`} target = "_blank">Download Pdf</a> */}
-        <div class = "image-preview" id = "imagePreview"> 
+         { post.Photo !== undefined && <div class = "image-preview" id = "imagePreview"> 
           <img src = {`http://localhost:5000/public/img/users/useruploadedpost - ${post.content}.jpeg`} class = "image-preview__image"  alt = "Image Preview"/> 
-        </div>
-        <a href="#/" onClick={() =>
+        </div>}
+        {post.post !== undefined  && <a href="#/" onClick={() =>
                         downloadFile(`${post._id}`, `${post.post}`, 'application/pdf')
                       }
-        > Download file </a>
+        > Download file </a>}
         <h3>
           {/* <Link className="link-without-underline" to={`/posts/${post._id}`}>
             {post.title}

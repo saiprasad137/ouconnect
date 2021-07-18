@@ -23,7 +23,7 @@ const compression = require('compression');
 const nodemailer = require('nodemailer');
 const creds = require('./config');
 const { getMaxListeners } = require('./models/user-schema');
-const { verify } = require('crypto');
+const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
@@ -33,11 +33,28 @@ const cookieParser = require('cookie-parser');
 const multer = require('multer');
 const sharp = require('sharp');
 const morgan = require('morgan');
+const {GridFsStorage} = require('multer-gridfs-storage');
+const Grid = require('gridfs-stream')
+const methodOverride = require('method-override')
+require('dotenv').config({path : '.env'}); //to use env variables
+
 
 const app = express();
 
+const conn = mongoose.createConnection(process.env.DATABASE,{
+    useNewUrlParser: true,
+    useFindAndModify:false,
+    useUnifiedTopology:true,
+    useCreateIndex:true
+});
 
-
+let gfs;
+let gridFSBucket;
+conn.once('open', () => {
+    gfs = Grid(conn.db,mongoose.mongo);
+    gridFSBucket = new mongoose.mongo.GridFSBucket(conn.db,{bucketName : 'uploads'});
+    gfs.collection('uploads');
+})
 
 
 // Global Middleware
@@ -69,6 +86,7 @@ app.use(bodyParser.urlencoded({
     extended: false
   }));
 
+app.use(methodOverride('_method'));
 app.engine('handlebars',expbhs({
     // extname: "handlebars",
     defaultLayout: false,
@@ -426,15 +444,6 @@ app.use('/find/restriction',verifyAccessTokenWithRestriction,(req,res,next) => {
 // })
 
 app.use('/delete/:id' , catchAsync(async (req,res,next) => {
-    // user.findByIdAndRemove(req.params.id, (error, data) => {
-    //     if (error) {
-    //         return next(new AppError('User not found',404))
-    //     } else {
-    //         res.status(200).json({
-    //             msg: data
-    //         })
-    //     }
-    // })
     const User =  await user.findByIdAndRemove(req.params.id);
     if(!User)
         return next(new AppError('User not found',404))
@@ -447,60 +456,128 @@ app.use('/delete/:id' , catchAsync(async (req,res,next) => {
 }));
 
 // const upload = multer({dest : 'public/img/users'});
-const upload = multer({
-    // storage:multer.diskStorage({
-    //         destination:(req,file,cb) => {
-    //             cb(null,'public/img/users');
-    //         },
-    //         filename:(req,file,cb) => {
-    //             const ext = file.mimetype.split('/')[1];
-    //             cb(null,`user - ${req.params.id} - ${Date.now()}.${ext}`);
-    //         }
-    //     }),
-    storage:multer.memoryStorage(),
-    fileFilter:(req,file,cb) => {
-            if(file.mimetype.startsWith('image')) {
-                cb(null,true);
-            }
-            else{
-                cb(new AppError('Not an image! Please Upload only image.',400),false);
-            }
+// const upload = multer({
+//     storage:multer.memoryStorage(),
+//     fileFilter:(req,file,cb) => {
+//             if(file.mimetype.startsWith('image')) {
+//                 cb(null,true);
+//             }
+//             else{
+//                 cb(new AppError('Not an image! Please Upload only image.',400),false);
+//             }
+//         }
+// });
+
+
+const storage = new GridFsStorage({
+  url: 'mongodb+srv://Admin-Sai:weconnect@cluster0.bqfzq.mongodb.net/connect',
+  file: (req, file) => {
+    return new Promise((resolve, reject) => {
+    //   crypto.randomBytes(16, (err, buf) => {
+    //     if (err) {
+    //       return reject(err);
+    //     }
+        // const filename = buf.toString('hex') + path.extname(file.originalname);
+        const filename = `user - ${req.params.id} - ${Date.now()}.jpeg`;
+        
+        const fileInfo = {
+          filename: filename,
+          bucketName: 'uploads'
+        };
+        
+        resolve(fileInfo);
+        user.findByIdAndUpdate(req.params.id, {
+            $set: {
+            Photo :filename,
         }
+        }, (error, data) => {
+            if (error) {
+                return next(error);
+            } else {
+                // res.json(data)
+                console.log('User updated successfully !')
+            }
+        })
+        });
+    }
 });
 
+const upload = multer({ storage ,  fileFilter:(req,file,cb) => {
+        if(file.mimetype.startsWith('image')) {
+            cb(null,true);
+        }
+        else{
+            cb(new AppError('Not an image! Please Upload only image.',400),false);
+        }
+    }});
 
 const resizePhoto = (req,res,next) => {
     if(!req.file)
         return next();
-    req.file.filename = `user - ${req.params.id} - ${Date.now()}.jpeg`;
+    // req.file.filename = `user - ${req.params.id} - ${Date.now()}.jpeg`;
 
     sharp(req.file.buffer)
     .resize(500,500)
     .toFormat('jpeg')
     .jpeg({ quality:90})
-    .toFile(`public/img/users/${req.file.filename}`);
+    // .toFile(`public/img/users/${req.file.filename}`);
 
     next();
 };
 
 app.use('/updatephoto/:id' , upload.single('Photo'),resizePhoto,(req, res, next) => {
-    console.log(req.file);
-    console.log(req.body);
+    // res.json({file:filename})
+    // console.log(req.file);
+    // console.log(req.body);
     
-    user.findByIdAndUpdate(req.params.id, {
-        $set: {
-        Photo :req.file.filename,
-    }
-    }, (error, data) => {
-        if (error) {
-            return next(error);
-        } else {
-            res.json(data)
-            console.log('User updated successfully !')
+    // user.findByIdAndUpdate(req.params.id, {
+    //     $set: {
+    //     Photo :req.file.filename,
+    // }
+    // }, (error, data) => {
+    //     if (error) {
+    //         return next(error);
+    //     } else {
+    //         res.json(data)
+    //         console.log('User updated successfully !')
+    //     }
+    // })
+})
+
+app.get('/files',(req,res) => {
+    gfs.files.find().toArray((err,files) => {
+        // Check if files 
+        if(!files || files.length === 0) {
+            return (new AppError('No file exists',400),false);
+        }
+        // Files exist
+        else {
+           return res.json(files);            
         }
     })
 })
 
+app.get('/files/:filename',(req,res) => {
+    gfs.files.findOne({filename:req.params.filename},(err,file) => {
+         // Check if file 
+         if(!file || file.length === 0) {
+            return (new AppError('No file exists',400),false);
+        }
+        // else {
+        //     return res.json(file)
+        // }
+        if(file.contentType === "image/jpeg"){
+            // const readstream = gfs.createReadStream(file.filename);
+            const readstream = gridFSBucket.openDownloadStream(file.filename);
+            readstream.pipe(res);
+        }
+        else{
+            return (new AppError('Not an Image',400),false);
+        }
+
+    }
+    )
+})
 //  POSTS UPLOAD
 
 const uploadpic = multer({

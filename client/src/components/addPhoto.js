@@ -34,6 +34,7 @@ class addPhoto extends Component {
         // axios.get('/userdetails', { headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` } })
         .then((res)=>{
             var id = res.data._id 
+            console.log(id);
             axios.post(`http://localhost:5000/updatephoto/${id}`,data,{
             // axios.post(`/updatephoto/${id}`,data,{
                 // headers: {
